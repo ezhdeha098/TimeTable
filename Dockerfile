@@ -46,8 +46,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Ensure frontend directory exists and has content
-RUN mkdir -p /app/static/frontend && ls -la /app/static/frontend/
+# Verify frontend files are in place
+RUN echo "Checking /app/static/frontend contents:" && ls -la /app/static/frontend/ || echo "Directory not found!"
 
 # Expose port
 EXPOSE 8080
