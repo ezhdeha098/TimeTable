@@ -23,6 +23,7 @@ COPY backend/ .
 COPY tts_v6.2/ /tts_v6.2
 
 # Run Django migrations and collect static
+ENV DJANGO_SETTINGS_MODULE=timetable_project.settings
 RUN python manage.py migrate
 RUN python manage.py collectstatic --noinput
 
