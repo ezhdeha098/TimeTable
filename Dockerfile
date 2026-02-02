@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Install backend requirements
+# Install backend requirements with increased timeout and retries
 COPY backend/req/requirements.txt backend_req.txt
-RUN pip install --no-cache-dir -r backend_req.txt
+RUN pip install --no-cache-dir --timeout=300 --retries=5 -r backend_req.txt
 RUN pip install gunicorn
 
 # Copy backend code
