@@ -33,6 +33,9 @@ WORKDIR /app/frontend
 RUN npm install
 RUN npm run build
 
+# Copy built frontend to nginx root
+RUN cp -r dist/* /app/frontend-dist/
+
 # Go back to root
 WORKDIR /app
 
