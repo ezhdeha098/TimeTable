@@ -46,9 +46,11 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Verify frontend files are in place
+# Verify frontend files are in place and check permissions
 RUN echo "=== Verifying /app/static/frontend contents ===" && ls -laR /app/static/frontend/ || echo "ERROR: Directory not found!"
 RUN echo "=== Testing if index.html exists ===" && test -f /app/static/frontend/index.html && echo "index.html found!" || echo "ERROR: index.html NOT FOUND!"
+RUN echo "=== Checking file permissions ===" && ls -la /app/static/frontend/index.html
+RUN echo "=== Testing if nginx can read index.html ===" && cat /app/static/frontend/index.html > /dev/null && echo "File is readable!" || echo "ERROR: Cannot read file!"
 
 # Expose port
 EXPOSE 8080
