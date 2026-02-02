@@ -35,7 +35,7 @@ RUN npm run build
 RUN ls -la dist/
 
 # Copy built frontend files to static location
-RUN mkdir -p /app/static/frontend && cp -r dist/* /app/static/frontend/
+RUN mkdir -p /app/static/frontend && cp -r dist/* /app/static/frontend/ && echo "=== Frontend files copied ===" && ls -laR /app/static/frontend/
 
 # Go back to root
 WORKDIR /app
@@ -47,7 +47,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Verify frontend files are in place
-RUN echo "Checking /app/static/frontend contents:" && ls -la /app/static/frontend/ || echo "Directory not found!"
+RUN echo "=== Verifying /app/static/frontend contents ===" && ls -laR /app/static/frontend/ || echo "ERROR: Directory not found!"
+RUN echo "=== Testing if index.html exists ===" && test -f /app/static/frontend/index.html && echo "index.html found!" || echo "ERROR: index.html NOT FOUND!"
 
 # Expose port
 EXPOSE 8080
