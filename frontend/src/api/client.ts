@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Prefer Vite proxy in dev; fall back to VITE_API_BASE for production builds
-const baseURL = import.meta.env.VITE_API_BASE || '/api';
+// Use relative /api path which nginx will proxy to Django backend
+const baseURL = '/api';
 
 const api = axios.create({ baseURL });
 
