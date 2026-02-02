@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     npm \
     nginx \
     supervisor \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -49,7 +50,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Create startup script to substitute PORT variable
 RUN echo '#!/bin/bash' > /start.sh && \
     echo 'export PORT=${PORT:-8080}' >> /start.sh && \
-    echo 'envsubst '\''$PORT'\'' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /start.sh && \
+    echo 'sed "s/\${PORT}/$PORT/g" /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /start.sh && \
     echo 'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' >> /start.sh && \
     chmod +x /start.sh
 
