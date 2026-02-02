@@ -40,11 +40,18 @@ RUN mkdir -p /app/static/frontend && cp -r dist/* /app/static/frontend/ && echo 
 # Go back to root
 WORKDIR /app
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx config template
+COPY nginx.conf /etc/nginx/nginx.conf.template
 
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Create startup script to substitute PORT variable
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'export PORT=${PORT:-8080}' >> /start.sh && \
+    echo 'envsubst '\''$PORT'\'' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /start.sh && \
+    echo 'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' >> /start.sh && \
+    chmod +x /start.sh
 
 # Verify frontend files are in place and check permissions
 RUN echo "=== Verifying /app/static/frontend contents ===" && ls -laR /app/static/frontend/ || echo "ERROR: Directory not found!"
@@ -52,8 +59,8 @@ RUN echo "=== Testing if index.html exists ===" && test -f /app/static/frontend/
 RUN echo "=== Checking file permissions ===" && ls -la /app/static/frontend/index.html
 RUN echo "=== Testing if nginx can read index.html ===" && cat /app/static/frontend/index.html > /dev/null && echo "File is readable!" || echo "ERROR: Cannot read file!"
 
-# Expose port
+# Expose port (will be overridden by Render's PORT env var)
 EXPOSE 8080
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start via script that sets up PORT variable
+CMD ["/start.sh"]
