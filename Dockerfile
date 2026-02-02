@@ -34,8 +34,8 @@ RUN npm install
 RUN npm run build
 RUN ls -la dist/
 
-# Create frontend-dist directory and copy built files
-RUN mkdir -p /app/frontend/dist && cp -r dist/* /app/frontend/dist/ && ls -la /app/frontend/dist/
+# Copy built frontend files to static location
+RUN mkdir -p /app/static/frontend && cp -r dist/* /app/static/frontend/
 
 # Go back to root
 WORKDIR /app
@@ -46,8 +46,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Ensure frontend-dist directory exists and has content
-RUN mkdir -p /app/frontend/dist && ls -la /app/frontend/dist/
+# Ensure frontend directory exists and has content
+RUN mkdir -p /app/static/frontend && ls -la /app/static/frontend/
 
 # Expose port
 EXPOSE 8080
