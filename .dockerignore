@@ -1,0 +1,15 @@
+.git
+__pycache__
+*.pyc
+node_modules
+frontend/node_modules
+.env
+README.md
+.gitignore
+backend/env/
+backend/db.sqlite3
+tts_v6.2/__pycache__
+*.log
+.DS_Store
+.vscode
+.vercel

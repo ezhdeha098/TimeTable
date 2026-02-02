@@ -1,0 +1,6 @@
+Django==5.0.1
+djangorestframework==3.14.0
+django-cors-headers==4.4.0
+ortools==9.9.3963      # OR-Tools for CP-SAT
+pandas==2.2.2
+openpyxl==3.1.5

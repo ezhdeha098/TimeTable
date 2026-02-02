@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scheduler UI</title>
+    <style>
+        body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        h2 { margin-top: 0; }
+        .log { background: #0b1020; color: #cfe3ff; padding: 12px; border-radius: 6px; height: 200px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        button { cursor: pointer; }
+        .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        label { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <h1>Scheduler Control Panel</h1>
+
+    <div class="card">
+        <h2>1) Upload Excel</h2>
+        <form id="upload-form">
+            <div class="row">
+                <div>
+                    <label>Main Excel</label><br />
+                    <input type="file" name="main_file" required />
+                </div>
+                <div>
+                    <label>Cohort Excel (optional)</label><br />
+                    <input type="file" name="cohort_file" />
+                </div>
+                <div>
+                    <button type="submit">Upload</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>2) Run Scheduling</h2>
+        <div class="row">
+            <label>Selected semesters (comma-separated)</label>
+            <input id="semesters" placeholder="e.g. 1,2,3" />
+            <label>Section size</label>
+            <input id="section_size" type="number" value="50" style="width:80px" />
+            <label>Program code</label>
+            <input id="program_code" value="A" style="width:60px" />
+            <label>Enable cohort</label>
+            <input id="enable_cohort" type="checkbox" />
+            <button id="run-schedule">Run</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3) Run Electives</h2>
+        <div class="row">
+            <label>Theory needed</label>
+            <input id="th_needed" type="number" value="2" style="width:60px" />
+            <label>Lab needed</label>
+            <input id="lb_needed" type="number" value="1" style="width:60px" />
+            <button id="run-electives">Run</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4) Export</h2>
+        <button id="export-btn">Download Timetable Excel</button>
+    </div>
+
+    <div class="card">
+        <h2>Progress & Errors</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const log = (msg) => {
+            const el = document.getElementById('log');
+            el.textContent += `\n${new Date().toLocaleTimeString()}  ${msg}`;
+            el.scrollTop = el.scrollHeight;
+        };
+
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            try {
+                log('Uploading Excel...');
+                const res = await fetch('/api/upload-excel/', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Upload failed');
+                log('Upload success.');
+            } catch (err) {
+                log('ERROR (upload): ' + err.message);
+            }
+        });
+
+        document.getElementById('run-schedule').addEventListener('click', async () => {
+            try {
+                const sems = document.getElementById('semesters').value
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map(Number);
+                const section_size = Number(document.getElementById('section_size').value || '50');
+                const program_code = document.getElementById('program_code').value || 'A';
+                const enable_cohort = document.getElementById('enable_cohort').checked;
+
+                log('Running main scheduler...');
+                const res = await fetch('/api/run-schedule/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        selected_semesters: sems,
+                        section_size,
+                        program_code,
+                        enable_cohort,
+                        clear_existing: true,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || data.status || 'Schedule failed');
+                log('Scheduler finished: ' + JSON.stringify(data));
+            } catch (err) {
+                log('ERROR (schedule): ' + err.message);
+            }
+        });
+
+        document.getElementById('run-electives').addEventListener('click', async () => {
+            try {
+                const th = Number(document.getElementById('th_needed').value || '2');
+                const lb = Number(document.getElementById('lb_needed').value || '1');
+                log('Running electives scheduler...');
+                const res = await fetch('/api/run-electives/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theory_needed: th, lab_needed: lb, clear_existing: true }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || data.status || 'Electives failed');
+                log('Electives finished: ' + JSON.stringify(data));
+            } catch (err) {
+                log('ERROR (electives): ' + err.message);
+            }
+        });
+
+        document.getElementById('export-btn').addEventListener('click', async () => {
+            try {
+                log('Downloading Excel...');
+                const res = await fetch('/api/export-timetable/');
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error || 'Export failed');
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'timetable.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                log('Downloaded.');
+            } catch (err) {
+                log('ERROR (export): ' + err.message);
+            }
+        });
+    </script>
+</body>
+</html>
