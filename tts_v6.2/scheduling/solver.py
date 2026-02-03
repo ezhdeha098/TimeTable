@@ -667,16 +667,18 @@ def schedule_timetable(
             for t in THEORY_TIMESLOTS:
                 if d == "Friday" and t == 3:
                     continue
-                has_theory[(sec, d, t)] = model.NewBoolVar(f'has_theory_{sec}_{d}_{t}')
                 if enable_cohort and cohort_map:
+                    has_theory[(sec, d, t)] = model.NewIntVar(0, 2, f'has_theory_{sec}_{d}_{t}')
                     model.Add(has_theory[(sec, d, t)] == has_normal_theory[(sec, d, t)] + has_cohort_theory[(sec, d, t)])
                 else:
+                    has_theory[(sec, d, t)] = model.NewBoolVar(f'has_theory_{sec}_{d}_{t}')
                     model.Add(has_theory[(sec, d, t)] == has_normal_theory[(sec, d, t)])
             for ls in LAB_SLOTS:
-                has_lab[(sec, d, ls)] = model.NewBoolVar(f'has_lab_{sec}_{d}_{ls}')
                 if enable_cohort and cohort_map:
+                    has_lab[(sec, d, ls)] = model.NewIntVar(0, 2, f'has_lab_{sec}_{d}_{ls}')
                     model.Add(has_lab[(sec, d, ls)] == has_normal_lab[(sec, d, ls)] + has_cohort_lab[(sec, d, ls)])
                 else:
+                    has_lab[(sec, d, ls)] = model.NewBoolVar(f'has_lab_{sec}_{d}_{ls}')
                     model.Add(has_lab[(sec, d, ls)] == has_normal_lab[(sec, d, ls)])
 
     # Enforce minimum gap between classes on the same day, if requested
